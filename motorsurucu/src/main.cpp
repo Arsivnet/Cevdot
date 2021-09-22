@@ -5,8 +5,11 @@
 #define length 120 //araç uzunluğu    |bunların testlere göre 1-2cm fazla verilmesi gerekebilir
 #define width 67 //araç genişliği     |
 
+/*150
+20
+65*/
 #define turning_distance 33 //dönmek için engelle arasında bırakması gereken mesafe: uzunluğun yarısı
-#define motor_radius 10 //motor çubuğunun çevresi
+#define motor_radius 36 //tekerin çevresi
 
 
 MPU6050 accelgyro;
@@ -39,8 +42,9 @@ uint16_t distanceL;
 int speedR = 90;
 int speedL = 90;
 int motor_rotation = 0;
-boolean turn = 0; //  0 = aracın solu kapalı
-boolean could_be_the_end = 0;       
+int motor_rotation_eternal = 0;
+boolean turn = 1; //  0 = aracın solu kapalı
+int yol = 0;     
 
 void yavasla(int, int);
 void hizlan(int, int);
@@ -160,43 +164,36 @@ yavasla(motrightB, 10);
 hizlan(motleftB, 10);
 }
 
-while( distance <= turning_distance){ //kod burayı yakalayamadan sensör değer değiştirirse burayı if-else yaparız
-if(turn){
+if(motor_rotation_eternal >= 2400) //change arch
+{
+  motor_rotation_eternal = 0;
+  if (turn == 1){
 turn_left();
 while(motor_rotation * motor_radius < width); //genişliği kadar mı ilerlesin uzunlluğu kadar mı? testlere göre değiştirilmeli
- sure=pulseIn(echo2,HIGH);
-toplamyol=(double)sure*0.034;
-distanceR=toplamyol/2;
-if(distanceR <= turning_distance)
-{motor_rotation = 0;while(motor_rotation * motor_radius < width);turn_left(); turn = 0;break;}//¢  Bu break iki if içinde. iki if'den de çıkması lazım
+turn_left();}
+else{
+turn_right();
+while(motor_rotation * motor_radius < width); //genişliği kadar mı ilerlesin uzunlluğu kadar mı? testlere göre değiştirilmeli
+turn_right();
+
+}
+
+}
+while( distance <= turning_distance){ //kod burayı yakalayamadan sensör değer değiştirirse burayı if-else yaparız //istediğimiz taraftan başlayabiliyoruz
+
+turn_left();
+while(motor_rotation * motor_radius < width); //genişliği kadar mı ilerlesin uzunlluğu kadar mı? testlere göre değiştirilmeli
 turn_right();
 while(motor_rotation * motor_radius < (length + turning_distance)); //sensör koşulu gereksiz olabilir. testlerden sonra gözden geçirilmeli
 turn_right();
 while(motor_rotation * motor_radius < width); //bu sefer sensörün out of range'dan çıkmasını ve normal bir değer vermesini bekliyoruz. testlere göre out of range mesafesi yerine makul bir değer girilebilir
-turn_left();}
-
-
-else{
-turn_right();
-while(motor_rotation * motor_radius < width); //genişliği kadar mı ilerlesin uzunlluğu kadar mı? testlere göre değiştirilmeli
- sure=pulseIn(echo3,HIGH);
-toplamyol=(double)sure*0.034;
-distanceL=toplamyol/2;
-if(distanceL <= turning_distance)
-{motor_rotation = 0;while(motor_rotation * motor_radius < width);turn_right(); turn = 1; break;}//¢  Bu break iki if içinde. iki if'den de çıkması lazım
 turn_left();
-while(motor_rotation * motor_radius < length + turning_distance); //sensör koşulu gereksiz olabilir. testlerden sonra gözden geçirilmeli
-turn_left();
-while(motor_rotation * motor_radius < width); //bu sefer sensörün out of range'dan çıkmasını ve normal bir değer vermesini bekliyoruz. testlere göre out of range mesafesi yerine makul bir değer girilebilir
-turn_right();
-}
-break;
-}
-}
+    }
+  }
 }
 void motorcounter(){
 motor_rotation++;
-
+motor_rotation_eternal++;
 }
 
 void turn_left(){
@@ -204,10 +201,9 @@ void turn_left(){
  motor_rotation = 0;
 yavasla(motleftB, 0);
 hizlan(motleftA, 90);
-/*int rotation_path = 2 * PI * (length / 2) / 4 ; // çevre /4 çünkü 90 derece dönecek = çevrenin dörtte biri kadar.
+int rotation_path = 2 * PI * (length / 2) / 4 ; // çevre /4 çünkü 90 derece dönecek = çevrenin dörtte biri kadar.
 int current_path_taken = motor_radius * motor_rotation;
-while (current_path_taken < rotation_path);*/
-while(count < 5){delay(1000);count++;}
+while (current_path_taken < rotation_path){current_path_taken = motor_radius * motor_rotation;}
 yavasla(motleftA, 0);
 hizlan(motleftB, 90);
 motor_rotation = 0; }
@@ -218,10 +214,9 @@ void turn_right(){
  motor_rotation = 0;
 yavasla(motrightB, 0);
 hizlan(motrightA, 90);
-/*int rotation_path = 2 * PI * (length / 2) / 4 ; // çevre /4 çünkü 90 derece dönecek = çevrenin dörtte biri kadar.
+int rotation_path = 2 * PI * (length / 2) / 4 ; // çevre /4 çünkü 90 derece dönecek = çevrenin dörtte biri kadar.
 int current_path_taken = motor_radius * motor_rotation;
-while (current_path_taken < rotation_path);*/
-while(count < 5){delay(1000);count++;}
+while (current_path_taken < rotation_path);
 yavasla(motrightA, 0);
 hizlan(motrightB, 90);
 motor_rotation = 0;  
